@@ -212,6 +212,11 @@ func (rn *Runner) review(ctx context.Context, gh *github.Client, pr *github.Pull
 	}
 	if runErr != nil && ctx.Err() == nil && !errors.Is(rctx.Err(), context.DeadlineExceeded) {
 		log.Warn("swarm ended with an error", "err", runErr)
+		if rep.Counts.Mapped == 0 && rep.Counts.Leads == 0 {
+			// The team never got to work (a flag sleipnir refused, a model it could not reach): the review failed, and the
+			// walkthrough says why instead of reporting a review that stopped part way.
+			return rep, fmt.Errorf("sleipnir swarm: %v: %s", runErr, lastLine(filepath.Join(dir, "swarm.log")))
+		}
 	}
 	return rep, nil
 }
@@ -221,7 +226,7 @@ func (rn *Runner) swarmArgs(goal string) []string {
 	if rn.Cfg.Image != "" {
 		sb += "=" + rn.Cfg.Image
 	}
-	args := []string{"swarm", fmt.Sprint(max(rn.Cfg.Team, 2)), "--sandbox", sb, "--mode", "bypass"}
+	args := []string{"swarm", fmt.Sprint(max(rn.Cfg.Team, 8)), "--sandbox", sb, "--mode", "bypass"}
 	if rn.Cfg.Network {
 		args = append(args, "--sandbox-network")
 	}
@@ -235,6 +240,20 @@ func (rn *Runner) swarmArgs(goal string) []string {
 		args = append(args, "--role-model", r)
 	}
 	return append(args, goal)
+}
+
+// lastLine is the last line of the file that is not empty, at most 300 bytes of it: what a failed sleipnir said last.
+func lastLine(path string) string {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	lines := strings.Split(strings.TrimSpace(string(b)), "\n")
+	l := strings.TrimSpace(lines[len(lines)-1])
+	if len(l) > 300 {
+		l = l[:300]
+	}
+	return l
 }
 
 // sleipnir runs the sleipnir binary in dir with only the configured variables of the environment, and returns its stdout (or

@@ -159,3 +159,22 @@ func TestPostSkipsWhatWasPosted(t *testing.T) {
 		t.Fatalf("comment: %+v", c)
 	}
 }
+
+// A team is never asked for fewer workers than sleipnir swarm accepts, and a failed swarm's last words are what the walkthrough
+// gives as the reason.
+func TestSwarmArgsAndLastLine(t *testing.T) {
+	rn := &Runner{Cfg: Config{Team: 4}}
+	if args := rn.swarmArgs("g"); args[1] != "8" {
+		t.Errorf("a team of 4 was asked as %q", args[1])
+	}
+	p := filepath.Join(t.TempDir(), "swarm.log")
+	if err := os.WriteFile(p, []byte("starting\nsleipnir: swarm: --swarm 4: a team has at least 8 workers\n\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got := lastLine(p); got != "sleipnir: swarm: --swarm 4: a team has at least 8 workers" {
+		t.Errorf("lastLine = %q", got)
+	}
+	if lastLine(filepath.Join(t.TempDir(), "none")) != "" {
+		t.Error("a missing log has a last line")
+	}
+}
