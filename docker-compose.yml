@@ -1,0 +1,28 @@
+# The review service. Fill .env (see .env.example) and the two secret files, then: docker compose up -d --build
+services:
+  reviewer:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${REVIEWER_PORT:-8080}:8080"
+    env_file: .env
+    environment:
+      GITHUB_APP_PRIVATE_KEY_FILE: /run/secrets/github_app_key
+      GITHUB_WEBHOOK_SECRET_FILE: /run/secrets/github_webhook_secret
+      REVIEWER_WORK: ${REVIEWER_WORK:-/srv/reviewer/work}
+    volumes:
+      # Sleipnir starts one sandbox container per review through the host's engine. Access to this socket is root on the
+      # host: run the service on a machine (or a VM) dedicated to it.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # The sandbox mounts the clone at the same path it has here, and the engine resolves that path on the host: the work
+      # directory must have the same path on both sides.
+      - ${REVIEWER_WORK:-/srv/reviewer/work}:${REVIEWER_WORK:-/srv/reviewer/work}
+    secrets:
+      - github_app_key
+      - github_webhook_secret
+
+secrets:
+  github_app_key:
+    file: ./secrets/github-app.pem
+  github_webhook_secret:
+    file: ./secrets/webhook-secret
