@@ -15,7 +15,7 @@ func TestLoad(t *testing.T) {
 		len(c.review.Env) != 1 || c.review.Env[0] != "HEIMDALLM_API_KEY" {
 		t.Fatalf("config: %+v", c)
 	}
-	for k, v := range map[string]string{"GITHUB_APP_ID": "x", "REVIEWER_TEAM": "1", "REVIEWER_DEPTH": "huge", "REVIEWER_TIMEOUT": "soon"} {
+	for k, v := range map[string]string{"GITHUB_APP_ID": "x", "REVIEWER_TEAM": "4", "REVIEWER_DEPTH": "huge", "REVIEWER_TIMEOUT": "soon"} {
 		bad := map[string]string{"GITHUB_APP_ID": "12", k: v}
 		if _, err := load(func(k string) string { return bad[k] }); err == nil {
 			t.Errorf("%s=%s was taken", k, v)

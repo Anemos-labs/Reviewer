@@ -65,7 +65,7 @@ its `scan` plugin on.
 | `GITHUB_API_URL` | `https://api.github.com` | |
 | `REVIEWER_ADDR` | `:8080` | Where the webhook is served |
 | `REVIEWER_WORKERS` | `1` | Reviews that run at once |
-| `REVIEWER_TEAM` | `8` | Agents per review (2 to 32) |
+| `REVIEWER_TEAM` | `8` | Agents per review (8 to 32: a Sleipnir team has at least 8 workers) |
 | `REVIEWER_DEPTH` | `standard` | `survey`, `standard` or `deep` (Sleipnir's depths) |
 | `REVIEWER_MODEL` | Sleipnir's | The default model |
 | `REVIEWER_ROLE_MODELS` | | `role=model`, comma separated |

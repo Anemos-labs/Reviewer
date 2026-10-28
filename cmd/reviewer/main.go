@@ -109,8 +109,8 @@ func load(get func(string) string) (config, error) {
 		Env:      fields(def("REVIEWER_PASS_ENV", "HEIMDALLM_API_KEY")),
 		Roles:    fields(get("REVIEWER_ROLE_MODELS")),
 	}
-	if r.Team, err = strconv.Atoi(def("REVIEWER_TEAM", "8")); err != nil || r.Team < 2 || r.Team > 32 {
-		return c, errors.New("REVIEWER_TEAM is a number from 2 to 32")
+	if r.Team, err = strconv.Atoi(def("REVIEWER_TEAM", "8")); err != nil || r.Team < 8 || r.Team > 32 {
+		return c, errors.New("REVIEWER_TEAM is a number from 8 to 32 (a Sleipnir team has at least 8 workers)")
 	}
 	if r.Budget, err = strconv.ParseFloat(def("REVIEWER_BUDGET_USD", "4"), 64); err != nil || r.Budget < 0 {
 		return c, errors.New("REVIEWER_BUDGET_USD is an amount in dollars")
