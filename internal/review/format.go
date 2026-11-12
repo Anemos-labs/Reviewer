@@ -28,9 +28,22 @@ type Report struct {
 		File  string   `json:"file"`
 		Lines [][2]int `json:"lines"`
 	} `json:"changes"`
-	Map struct {
+	// Seams are where two parts of the change, or the change and the code it talks to, meet: each checked from both sides.
+	Seams []Seam `json:"seams"`
+	Map   struct {
 		Nodes []Node `json:"nodes"`
 	} `json:"-"`
+}
+
+// Seam is one place two parts meet (A and B: a shard id, or a directory outside the change), and the contract its checker
+// wrote down with quotes from both sides.
+type Seam struct {
+	ID       string   `json:"id"`
+	A        string   `json:"a"`
+	B        string   `json:"b"`
+	Edges    []string `json:"edges"`
+	Checked  string   `json:"checked"`
+	Contract []Cite   `json:"contract"`
 }
 
 // Counts are the review's numbers.
@@ -321,6 +334,13 @@ func Walkthrough(repo string, r *Report, state string) string {
 		}
 		w("\n</details>\n\n")
 	}
+	if seams := r.checkedSeams(); len(seams) > 0 {
+		w("<details>\n<summary>%d %s where the change meets other code, checked from both sides</summary>\n\n| Where | Contract |\n|---|---|\n", len(seams), plural(len(seams), "seam", "seams"))
+		for _, sm := range seams {
+			w("| %s ↔ %s | %s |\n", cell(r.sideLabel(sm.A)), cell(r.sideLabel(sm.B)), cell(oneLine(sm.Checked)))
+		}
+		w("\n</details>\n\n")
+	}
 	if c.Rejected > 0 {
 		w("%d %s rejected by verifiers and not posted.\n\n", c.Rejected, plural(c.Rejected, "lead was", "leads were"))
 	}
@@ -382,4 +402,25 @@ func fence(s, indent string) string {
 	}
 	b.WriteString(indent + ticks + "\n")
 	return b.String()
+}
+
+// checkedSeams are the review's seams that were checked.
+func (r *Report) checkedSeams() []Seam {
+	var out []Seam
+	for _, sm := range r.Seams {
+		if strings.TrimSpace(sm.Checked) != "" {
+			out = append(out, sm)
+		}
+	}
+	return out
+}
+
+// sideLabel names a side of a seam for a reader: a shard by its files, as the map labels it, or a directory outside the change.
+func (r *Report) sideLabel(side string) string {
+	for _, n := range r.Map.Nodes {
+		if n.Kind == "shard" && n.ID == side && n.Label != "" {
+			return n.Label
+		}
+	}
+	return side
 }

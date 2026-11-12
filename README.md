@@ -2,7 +2,7 @@
 
 A pull request review bot for GitHub, run by [Sleipnir](https://github.com/anemos-labs/sleipnir). For each pull request it runs
 a Sleipnir **review**: a team of agents maps the files the change wrote, hunts them for the holes the change brings in, and
-reports only what other agents verified and, from the depth's threshold up, a reproducer showed in a Docker sandbox. It is the
+reports only what other agents verified (including the seams where the change meets code it did not touch, checked from both sides) and, from the depth's threshold up, a reproducer showed in a Docker sandbox. It is the
 deep scan (`sleipnir scan`, docs/SCAN.md in Sleipnir) on a diff.
 
 What a pull request gets:
