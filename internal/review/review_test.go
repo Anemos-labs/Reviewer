@@ -32,7 +32,9 @@ const findingsJSON = `{"scan":"review-20261028-0500-abcdef1","commit":"abcdef123
  "anchor":{"file":"server/h.go","line":10,"quote":"exec.Command(\"sh\", \"-c\", \"ping \"+host)"}},
 {"id":"L2","title":"Path traversal","category":"path-traversal","severity":"high","status":"unproven","claim":"Reads any file.","trace":[{"file":"server/h.go","line":20,"quote":"open(p)","note":"sink"}],"anchor":{"file":"server/h.go","line":20,"quote":"open(p)"}},
 {"id":"L3","title":"Not real","category":"injection","severity":"low","status":"rejected","claim":"x","trace":[{"file":"a","line":1,"quote":"x","note":"x"}]}
-]}`
+],
+"seams":[{"id":"X1","a":"S1","b":"lib/","edges":["E1"],"checked":"Ping hands host to lib.Run, which assumes it was validated","contract":[{"file":"server/h.go","line":10,"quote":"x"}]},
+{"id":"X2","a":"S1","b":"web/","edges":["E2"]}]}`
 
 const mapJSON = `{"nodes":[{"id":"S1","label":"server/h.go","kind":"shard","summary":"The ping handler | runs a shell"},{"id":"P1","kind":"point","label":"p"}]}`
 
@@ -63,7 +65,8 @@ func TestFormat(t *testing.T) {
 		t.Error("a posted finding is not found again")
 	}
 	w := Walkthrough("o/r", r, "")
-	for _, want := range []string{WalkthroughMarker, "The ping handler \\| runs a shell", "**1 actionable finding**", "1 more confirmed by verifiers", "Path traversal", "1 lead was rejected", "`review-20261028-0500-abcdef1`"} {
+	for _, want := range []string{WalkthroughMarker, "The ping handler \\| runs a shell", "**1 actionable finding**", "1 more confirmed by verifiers", "Path traversal", "1 lead was rejected", "`review-20261028-0500-abcdef1`",
+		"1 seam where the change meets other code", "| server/h.go ↔ lib/ | Ping hands host to lib.Run"} {
 		if !strings.Contains(w, want) {
 			t.Errorf("walkthrough lacks %q:\n%s", want, w)
 		}
